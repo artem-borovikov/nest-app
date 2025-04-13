@@ -1,0 +1,21 @@
+services:
+  api: 
+    build: api
+    expose:
+      - 3000
+    networks:
+      - web
+    labels:
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.rule=Host(`${APP_HOST}`) && PathRegexp(`^/api/v/([0-9]+)(/.*)?$`)
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+
+networks:
+  web: 
+    external: true 
+    name: ${NETWORK_NAME}

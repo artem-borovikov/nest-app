@@ -1,0 +1,19 @@
+services:
+  proxy:
+    image: traefik:3.3
+    command:
+      - --entryPoints.web.address=:80
+      - --accesslog=true
+      - --providers.docker
+      - --log.level=DEBUG
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+    name: ${NETWORK_NAME}
