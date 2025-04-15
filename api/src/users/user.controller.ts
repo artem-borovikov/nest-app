@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
   Inject,
   Param,
@@ -29,146 +28,42 @@ export class UserController {
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createUserDto: CreateUserDto) {
-    try {
-      const result = await this.userService.create(createUserDto);
-      return this.responseMapper.success(result);
-    } catch (error) {
-      if (error instanceof HttpException) {
-        if (error.getStatus() === HttpStatus.CONFLICT) {
-          throw new HttpException(
-            {
-              success: false,
-            },
-            error.getStatus(),
-          );
-        }
-        throw error;
-      }
-      throw new HttpException(
-        {
-          success: false,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const result = await this.userService.create(createUserDto);
+    return this.responseMapper.success(result);
   }
 
-  @Get(':id')
+  @Get('get/:id')
   @HttpCode(HttpStatus.OK)
   async getById(@Param('id') id: string) {
-    try {
-      const user = await this.userService.getById(Number(id));
-      if (!user) {
-        throw new HttpException(
-          {
-            success: false,
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      }
-      return this.responseMapper.success(user);
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        {
-          success: false,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const user = await this.userService.getById(Number(id));
+    return this.responseMapper.success({ users: [user] });
   }
 
-  @Get()
+  @Get('get')
   @HttpCode(HttpStatus.OK)
   async getAll(@Query() filters?: GetUsersDto) {
-    try {
-      const result = await this.userService.getAll(filters);
-      return this.responseMapper.success(result);
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        {
-          success: false,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const result = await this.userService.getAll(filters);
+    return this.responseMapper.success(result);
   }
 
-  @Patch(':id')
+  @Patch('update/:id')
   @HttpCode(HttpStatus.OK)
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    try {
-      const user = await this.userService.update(Number(id), updateUserDto);
-      if (!user) {
-        throw new HttpException(
-          {
-            success: false,
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      }
-      return this.responseMapper.success(user);
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        {
-          success: false,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const user = await this.userService.update(Number(id), updateUserDto);
+    return this.responseMapper.success(user);
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
   @HttpCode(HttpStatus.OK)
   async deleteById(@Param('id') id: string) {
-    try {
-      const user = await this.userService.deleteById(Number(id));
-      if (!user) {
-        throw new HttpException(
-          {
-            success: false,
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      }
-      return this.responseMapper.success(user);
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        {
-          success: false,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const user = await this.userService.deleteById(Number(id));
+    return this.responseMapper.success(user);
   }
 
-  @Delete()
+  @Delete('delete')
   @HttpCode(HttpStatus.OK)
   async deleteAll() {
-    try {
-      await this.userService.deleteAll();
-      return this.responseMapper.success();
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        {
-          success: false,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    await this.userService.deleteAll();
+    return this.responseMapper.success();
   }
 }

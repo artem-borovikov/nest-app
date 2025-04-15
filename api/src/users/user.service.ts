@@ -1,6 +1,12 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { USER_ERRORS } from './constants/user.constants';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,6 +18,46 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  private async checkExistingRoles(roles: string[]): Promise<void> {
+    const existingRoles = await this.userRepository
+      .createQueryBuilder('user')
+      .select('DISTINCT user.role')
+      .where('user.role IN (:...roles)', { roles })
+      .getRawMany();
+
+    if (existingRoles.length !== roles.length) {
+      throw new HttpException(
+        {
+          success: false,
+          result: {
+            error: USER_ERRORS.ROLES_NOT_FOUND,
+          },
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  private async checkExistingNames(names: string[]): Promise<void> {
+    const existingNames = await this.userRepository
+      .createQueryBuilder('user')
+      .select('DISTINCT user.full_name')
+      .where('user.full_name IN (:...names)', { names })
+      .getRawMany();
+
+    if (existingNames.length !== names.length) {
+      throw new HttpException(
+        {
+          success: false,
+          result: {
+            error: USER_ERRORS.NAMES_NOT_FOUND,
+          },
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
 
   public async create(createUserDto: CreateUserDto): Promise<{ id: number }> {
     const existingUser = await this.userRepository.findOne({
@@ -36,6 +82,15 @@ export class UserService {
   public async getAll(
     filters?: GetUsersDto,
   ): Promise<{ users: User[]; total: number }> {
+    if (filters) {
+      if (filters.role?.length) {
+        await this.checkExistingRoles(filters.role);
+      }
+      if (filters.full_name?.length) {
+        await this.checkExistingNames(filters.full_name);
+      }
+    }
+
     const queryBuilder = this.userRepository.createQueryBuilder('user');
 
     if (filters) {
