@@ -59,9 +59,9 @@ export class UserService {
     }
   }
 
-  public async create(createUserDto: CreateUserDto): Promise<{ id: number }> {
+  private async checkExistingName(userName: string): Promise<void> {
     const existingUser = await this.userRepository.findOne({
-      where: { full_name: createUserDto.full_name },
+      where: { full_name: userName },
     });
 
     if (existingUser) {
@@ -69,7 +69,10 @@ export class UserService {
         'Пользователь с таким именем уже существует!',
       );
     }
+  }
 
+  public async create(createUserDto: CreateUserDto): Promise<{ id: number }> {
+    await this.checkExistingName(createUserDto.full_name);
     const user = this.userRepository.create(createUserDto);
     const savedUser = await this.userRepository.save(user);
     return { id: savedUser.id };
@@ -135,13 +138,25 @@ export class UserService {
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<User | null> {
+    if (updateUserDto.full_name) {
+      await this.checkExistingName(updateUserDto.full_name);
+    }
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      return null;
+      throw new HttpException(
+        {
+          success: false,
+          result: {
+            error: USER_ERRORS.USER_NOT_FOUND,
+          },
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     const updatedUser = this.userRepository.merge(user, updateUserDto);
-    return await this.userRepository.save(updatedUser);
+    const savedUser = await this.userRepository.save(updatedUser);
+    return savedUser;
   }
 
   public async deleteById(id: number): Promise<User | null> {
