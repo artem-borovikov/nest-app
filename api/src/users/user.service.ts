@@ -48,12 +48,7 @@ export class UserService {
 
     if (existingNames.length !== names.length) {
       throw new HttpException(
-        {
-          success: false,
-          result: {
-            error: USER_ERRORS.NAMES_NOT_FOUND,
-          },
-        },
+        USER_ERRORS.USER_ALREADY_EXISTS,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -143,15 +138,7 @@ export class UserService {
     }
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new HttpException(
-        {
-          success: false,
-          result: {
-            error: USER_ERRORS.USER_NOT_FOUND,
-          },
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(USER_ERRORS.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
     const updatedUser = this.userRepository.merge(user, updateUserDto);
