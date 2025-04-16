@@ -122,7 +122,7 @@ export class UserService {
     }
 
     const [users, total] = await queryBuilder
-      .skip(filters?.offset || 0)
+      .skip(filters?.offset || 0) // FIXME magic
       .take(filters?.limit || 10)
       .getManyAndCount();
 
